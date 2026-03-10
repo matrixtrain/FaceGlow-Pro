@@ -1,281 +1,432 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaceGlow Pro: AI Symmetry Analyzer & Glow-Up Guide</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%), url('https://images.unsplash.com/photo-1556228720-195a672e8a03?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-            background-size: cover;
-            color: #ecf0f1;
-            overflow-x: hidden;
-            position: relative;
-        }
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: -1;
-        }
-        .hero {
-            text-align: center;
-            padding: 50px 20px;
-            background: #ffffff;
-            background-image: radial-gradient(circle at 25% 25%, #f0f0f0 0%, transparent 50%), radial-gradient(circle at 75% 75%, #e0e0e0 0%, transparent 50%);
-            margin-bottom: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 1s ease-in-out;
-            color: #2c3e50;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto 50px;
-            background: rgba(52, 73, 94, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 1s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        }
-        .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 1.1em;
-            margin-bottom: 30px;
-        }
-        .upload-section {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(44, 62, 80, 0.8);
-            border-radius: 10px;
-            border: 2px dashed #7f8c8d;
-            transition: border-color 0.3s;
-        }
-        .upload-section:hover {
-            border-color: #3498db;
-        }
-        #imageInput {
-            margin: 15px 0;
-            padding: 10px;
-            border: 1px solid #7f8c8d;
-            border-radius: 5px;
-            background: #34495e;
-            color: #ecf0f1;
-        }
-        #analyzeBtn {
-            padding: 12px 25px;
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        #analyzeBtn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-        .results {
-            margin-top: 30px;
-            display: none;
-            animation: slideIn 0.5s ease-out;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-50px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .rating {
-            font-size: 2em;
-            font-weight: bold;
-            color: #2ecc71;
-            display: inline-block;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .advice {
-            margin-top: 30px;
-            background: rgba(44, 62, 80, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 5px solid #3498db;
-        }
-        .advice h3 {
-            color: #ecf0f1;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-        .advice h3 i {
-            margin-right: 10px;
-            color: #3498db;
-        }
-        .advice ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .advice li {
-            padding: 10px 0;
-            border-bottom: 1px solid #7f8c8d;
-            display: flex;
-            align-items: flex-start;
-            color: #bdc3c7;
-        }
-        .advice li i {
-            margin-right: 10px;
-            color: #2ecc71;
-            margin-top: 2px;
-        }
-        .advice li:last-child {
-            border-bottom: none;
-        }
-        canvas {
-            display: block;
-            margin: 20px auto;
-            border: 3px solid #7f8c8d;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            color: #bdc3c7;
-            font-size: 0.9em;
-            background: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        footer a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        footer a:hover {
-            text-decoration: underline;
-        }
-        .icon {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-            color: #3498db;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FaceGlow Pro — Coach IA Glow-Up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: rgba(19, 28, 53, 0.82);
+      --text: #f5f7ff;
+      --muted: #b9c1dd;
+      --accent: #8f7bff;
+      --accent-2: #40d7c1;
+      --ok: #3ed88e;
+      --warn: #ffd166;
+      --danger: #ff6b6b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(143, 123, 255, 0.25), transparent 30%),
+        radial-gradient(circle at 90% 20%, rgba(64, 215, 193, 0.2), transparent 35%),
+        linear-gradient(170deg, #090d1a, #101935 45%, #0c142a 100%);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 26px 18px 44px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      margin: 0;
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #c9bfff, #8f7bff, #40d7c1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 760px;
+      margin: 12px auto 0;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 1.05fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 40px rgba(5, 7, 15, 0.45);
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+    }
+
+    .hint {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .drop {
+      border: 2px dashed rgba(255, 255, 255, 0.28);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      transition: .2s ease;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .drop:hover { border-color: var(--accent-2); }
+
+    input[type="file"] {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .controls {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .inline {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    select, button {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+    }
+
+    select {
+      background: #1a2446;
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    button {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: #081023;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    button:hover { filter: brightness(1.06); }
+
+    .preview {
+      margin-top: 14px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .preview img {
+      width: 100%;
+      max-height: 320px;
+      object-fit: cover;
+      display: none;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .metric {
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,.02);
+    }
+
+    .metric .k { color: var(--muted); font-size: .85rem; }
+    .metric .v { font-size: 1.3rem; font-weight: 700; margin-top: 3px; }
+
+    .coach {
+      margin-top: 12px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 14px;
+      padding: 12px;
+      max-height: 320px;
+      overflow: auto;
+      background: rgba(0, 0, 0, .18);
+    }
+
+    .msg {
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      line-height: 1.45;
+      font-size: .92rem;
+    }
+
+    .ia { background: rgba(64, 215, 193, 0.15); border: 1px solid rgba(64, 215, 193, 0.3); }
+    .plan { background: rgba(143, 123, 255, 0.14); border: 1px solid rgba(143, 123, 255, 0.32); }
+
+    .footnote {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+  </style>
 </head>
 <body>
-    <div class="hero">
-        <h1><i class="fas fa-magic"></i> FaceGlow Pro: AI Symmetry Analyzer & Glow-Up Guide</h1>
-        <p class="subtitle">Transform your look with cutting-edge analysis and expert beauty tips. Upload your photo and discover your glow-up potential!</p>
-    </div>
-    
-    <div class="container">
-        <div class="upload-section">
-            <i class="fas fa-upload icon"></i>
-            <p>Choose a clear, front-facing photo of your face</p>
-            <input type="file" id="imageInput" accept="image/*">
-            <br>
-            <button id="analyzeBtn"><i class="fas fa-search"></i> Analyze Face</button>
+  <div class="wrap">
+    <header class="hero">
+      <h1><span class="gradient-text">FaceGlow Pro</span> — Coach IA Glow-Up</h1>
+      <p class="subtitle">Upload une photo de ton visage et reçois un plan glow-up pro, personnalisé et créatif. L'analyse utilise des indicateurs visuels (luminosité, contraste, teinte) pour générer des recommandations routine + style.</p>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>1) Photo & objectifs</h2>
+        <p class="hint">Conseil : photo nette, lumière naturelle, visage de face, sans filtre.</p>
+
+        <div class="drop">
+          <strong>Importer une photo</strong>
+          <input id="imageInput" type="file" accept="image/*" />
         </div>
-        
-        <div class="results" id="results">
-            <h2><i class="fas fa-chart-line"></i> Analysis Results</h2>
-            <canvas id="canvas" width="400" height="400"></canvas>
-            <p>Symmetry Rating: <span class="rating" id="rating">N/A</span>/10 <i class="fas fa-star"></i></p>
-            <div class="advice">
-                <h3><i class="fas fa-lightbulb"></i> Professional Glow-Up Advice</h3>
-                <ul id="adviceList">
-                    <!-- Advice will be populated here -->
-                </ul>
+
+        <div class="controls">
+          <div class="inline">
+            <div>
+              <label for="goal">Objectif principal</label>
+              <select id="goal">
+                <option value="clean">Peau clean & uniforme</option>
+                <option value="sharp">Look plus sculpté</option>
+                <option value="creative">Glow-up créatif / artistique</option>
+              </select>
             </div>
+            <div>
+              <label for="vibe">Style recherché</label>
+              <select id="vibe">
+                <option value="pro">Professionnel</option>
+                <option value="lux">Lux & premium</option>
+                <option value="street">Modern street</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="analyzeBtn">Analyser avec le Coach IA</button>
         </div>
-    </div>
-    
-    <footer>
-        <p>&copy; 2023 FaceGlow Pro. For real consultations, visit a professional. <a href="#">Privacy Policy</a></p>
-    </footer>
 
-    <script>
-        document.getElementById('analyzeBtn').addEventListener('click', function() {
-            const fileInput = document.getElementById('imageInput');
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const results = document.getElementById('results');
-            const rating = document.getElementById('rating');
-            const adviceList = document.getElementById('adviceList');
+        <div class="preview">
+          <img id="previewImg" alt="Aperçu photo" />
+          <span id="placeholder">Aperçu photo ici</span>
+        </div>
+      </article>
 
-            if (!fileInput.files[0]) {
-                alert('Please select an image first.');
-                return;
-            }
+      <article class="card">
+        <h2>2) Résultats & plan</h2>
+        <p class="hint">Score indicatif généré localement (pas un diagnostic médical).</p>
 
-            const img = new Image();
-            img.onload = function() {
-                // Draw image on canvas
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        <div class="metrics">
+          <div class="metric"><div class="k">Glow Score</div><div class="v" id="glowScore">—</div></div>
+          <div class="metric"><div class="k">Éclat</div><div class="v" id="luminosity">—</div></div>
+          <div class="metric"><div class="k">Texture visuelle</div><div class="v" id="contrast">—</div></div>
+          <div class="metric"><div class="k">Warmth tone</div><div class="v" id="warmth">—</div></div>
+        </div>
 
-                // Simulate symmetry rating (random for demo; in reality, use AI/ML)
-                const symmetryScore = Math.floor(Math.random() * 11); // 0-10
-                rating.textContent = symmetryScore;
+        <div class="coach" id="coachFeed">
+          <div class="msg ia">👋 Je suis ton Coach IA FaceGlow Pro. Envoie une photo pour générer ton plan glow-up personnalisé.</div>
+        </div>
 
-                // Clear previous advice
-                adviceList.innerHTML = '';
+        <p class="footnote">⚠️ Ce coach fournit des conseils bien-être/style et ne remplace pas un dermatologue ou un professionnel de santé.</p>
+      </article>
+    </section>
+  </div>
 
-                // Generate advice based on score
-                let advice = [];
-                if (symmetryScore >= 8) {
-                    advice = [
-                        'Maintain excellent skincare routine with retinoids and hyaluronic acid.',
-                        'Consider cosmetic procedures like fillers for minor asymmetries if desired.',
-                        'Focus on overall health: balanced diet, exercise, and sleep for natural glow.'
-                    ];
-                } else if (symmetryScore >= 5) {
-                    advice = [
-                        'Improve symmetry through targeted exercises (e.g., facial yoga for jawline).',
-                        'Use makeup techniques to contour and highlight features.',
-                        'Consult a dermatologist for treatments like chemical peels or laser therapy.',
-                        'Adopt a healthy lifestyle: hydration, sun protection, and anti-aging products.'
-                    ];
-                } else {
-                    advice = [
-                        'Seek professional evaluation from a maxillofacial surgeon or orthodontist.',
-                        'Consider orthodontic treatments or cosmetic surgery for structural improvements.',
-                        'Build confidence through grooming: regular haircuts, eyewear, and clothing that flatters your face shape.',
-                        'Prioritize mental health; attractiveness is subjective and multifaceted.'
-                    ];
-                }
+  <canvas id="analysisCanvas" width="320" height="320" style="display:none"></canvas>
 
-                advice.forEach(item => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<i class="fas fa-check-circle"></i> ${item}`;
-                    adviceList.appendChild(li);
-                });
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const previewImg = document.getElementById('previewImg');
+    const placeholder = document.getElementById('placeholder');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const canvas = document.getElementById('analysisCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-                results.style.display = 'block';
-            };
-            img.src = URL.createObjectURL(fileInput.files[0]);
-        });
-    </script>
+    const glowScore = document.getElementById('glowScore');
+    const luminosity = document.getElementById('luminosity');
+    const contrast = document.getElementById('contrast');
+    const warmth = document.getElementById('warmth');
+    const coachFeed = document.getElementById('coachFeed');
+
+    let currentImageSrc = null;
+
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files?.[0];
+      if (!file) return;
+      currentImageSrc = URL.createObjectURL(file);
+      previewImg.src = currentImageSrc;
+      previewImg.style.display = 'block';
+      placeholder.style.display = 'none';
+    });
+
+    analyzeBtn.addEventListener('click', async () => {
+      if (!currentImageSrc) {
+        alert('Ajoute une photo avant de lancer le coach IA.');
+        return;
+      }
+
+      const img = await loadImage(currentImageSrc);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const stats = computeStats(data);
+
+      const goal = document.getElementById('goal').value;
+      const vibe = document.getElementById('vibe').value;
+
+      const score = Math.max(52, Math.min(97, Math.round(stats.luma * 0.35 + (100 - stats.contrast) * 0.2 + stats.warm * 0.25 + 26)));
+
+      glowScore.textContent = `${score}/100`;
+      luminosity.textContent = scoreLabel(stats.luma);
+      contrast.textContent = scoreLabel(100 - stats.contrast);
+      warmth.textContent = toneLabel(stats.warm);
+
+      const messages = buildPlan({ score, goal, vibe, stats });
+      coachFeed.innerHTML = '';
+      messages.forEach((m, i) => {
+        const div = document.createElement('div');
+        div.className = `msg ${i === 0 ? 'ia' : 'plan'}`;
+        div.innerHTML = m;
+        coachFeed.appendChild(div);
+      });
+    });
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function computeStats(data) {
+      let lumaTotal = 0;
+      let warmTotal = 0;
+      let samples = 0;
+      const luminances = [];
+
+      for (let i = 0; i < data.length; i += 16) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const l = 0.299 * r + 0.587 * g + 0.114 * b;
+        lumaTotal += l;
+        warmTotal += (r - b + 255) / 2;
+        luminances.push(l);
+        samples++;
+      }
+
+      const mean = lumaTotal / samples;
+      let variance = 0;
+      for (const l of luminances) variance += (l - mean) ** 2;
+      const std = Math.sqrt(variance / samples);
+
+      return {
+        luma: Math.round((mean / 255) * 100),
+        contrast: Math.round(Math.min(100, (std / 80) * 100)),
+        warm: Math.round((warmTotal / samples / 255) * 100)
+      };
+    }
+
+    function scoreLabel(value) {
+      if (value > 75) return 'Élevé';
+      if (value > 55) return 'Moyen+';
+      if (value > 40) return 'Moyen';
+      return 'À booster';
+    }
+
+    function toneLabel(value) {
+      if (value > 65) return 'Chaud';
+      if (value > 45) return 'Neutre';
+      return 'Froid';
+    }
+
+    function buildPlan({ score, goal, vibe, stats }) {
+      const greeting = `✨ Analyse terminée. Ton <strong>Glow Score est ${score}/100</strong>. Objectif: <strong>${goal}</strong>, style: <strong>${vibe}</strong>.`;
+
+      const routineMorning = stats.luma < 58
+        ? 'Matin: nettoyant doux + vitamine C + SPF50 (obligatoire).'
+        : 'Matin: nettoyant léger + niacinamide + SPF50 pour conserver l’éclat.';
+
+      const routineNight = stats.contrast > 55
+        ? 'Soir: double nettoyage + sérum hydratant + crème barrière (focus texture).'
+        : 'Soir: nettoyage doux + rétinoïde progressif 2-3x/semaine + hydratation.';
+
+      const goalAdvice = {
+        clean: 'Focus clean skin: limiter sucre ultra-transformé, 2L d’eau/jour, taie d’oreiller changée 2x/semaine.',
+        sharp: 'Focus sculpté: haircut plus structuré, sourcils entretenus, posture + exercices cou/mâchoire 10 min/jour.',
+        creative: 'Focus créatif: teste une signature look (liner soft, hair streak, accessoires cohérents avec ton teint).'
+      }[goal];
+
+      const vibeAdvice = {
+        pro: 'Vibe pro: palette sobre (noir, marine, beige), grooming net, parfum discret.',
+        lux: 'Vibe lux: matières premium, bijoux minimalistes, contrastes propres et finition impeccable.',
+        street: 'Vibe street: layering, sneakers statement, coupe moderne, accent couleur contrôlé.'
+      }[vibe];
+
+      const weekly = score >= 80
+        ? 'Challenge 7 jours: maintenir constance, suivi sommeil, et photos avant/après en même lumière.'
+        : 'Challenge 7 jours: routine stricte matin/soir + 15 min sport/jour + zéro oubli SPF.';
+
+      return [
+        greeting,
+        `🧴 <strong>Routine</strong><br>${routineMorning}<br>${routineNight}`,
+        `🎯 <strong>Plan Glow-Up</strong><br>${goalAdvice}<br>${vibeAdvice}`,
+        `🚀 <strong>Exécution</strong><br>${weekly}`
+      ];
+    }
+  </script>
 </body>
 </html>
