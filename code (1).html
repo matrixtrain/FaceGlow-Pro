@@ -1,281 +1,535 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaceGlow Pro: AI Symmetry Analyzer & Glow-Up Guide</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%), url('https://images.unsplash.com/photo-1556228720-195a672e8a03?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-            background-size: cover;
-            color: #ecf0f1;
-            overflow-x: hidden;
-            position: relative;
-        }
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: -1;
-        }
-        .hero {
-            text-align: center;
-            padding: 50px 20px;
-            background: #ffffff;
-            background-image: radial-gradient(circle at 25% 25%, #f0f0f0 0%, transparent 50%), radial-gradient(circle at 75% 75%, #e0e0e0 0%, transparent 50%);
-            margin-bottom: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 1s ease-in-out;
-            color: #2c3e50;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto 50px;
-            background: rgba(52, 73, 94, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 1s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        }
-        .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 1.1em;
-            margin-bottom: 30px;
-        }
-        .upload-section {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(44, 62, 80, 0.8);
-            border-radius: 10px;
-            border: 2px dashed #7f8c8d;
-            transition: border-color 0.3s;
-        }
-        .upload-section:hover {
-            border-color: #3498db;
-        }
-        #imageInput {
-            margin: 15px 0;
-            padding: 10px;
-            border: 1px solid #7f8c8d;
-            border-radius: 5px;
-            background: #34495e;
-            color: #ecf0f1;
-        }
-        #analyzeBtn {
-            padding: 12px 25px;
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        #analyzeBtn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-        .results {
-            margin-top: 30px;
-            display: none;
-            animation: slideIn 0.5s ease-out;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-50px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .rating {
-            font-size: 2em;
-            font-weight: bold;
-            color: #2ecc71;
-            display: inline-block;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .advice {
-            margin-top: 30px;
-            background: rgba(44, 62, 80, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 5px solid #3498db;
-        }
-        .advice h3 {
-            color: #ecf0f1;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-        .advice h3 i {
-            margin-right: 10px;
-            color: #3498db;
-        }
-        .advice ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .advice li {
-            padding: 10px 0;
-            border-bottom: 1px solid #7f8c8d;
-            display: flex;
-            align-items: flex-start;
-            color: #bdc3c7;
-        }
-        .advice li i {
-            margin-right: 10px;
-            color: #2ecc71;
-            margin-top: 2px;
-        }
-        .advice li:last-child {
-            border-bottom: none;
-        }
-        canvas {
-            display: block;
-            margin: 20px auto;
-            border: 3px solid #7f8c8d;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            color: #bdc3c7;
-            font-size: 0.9em;
-            background: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        footer a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        footer a:hover {
-            text-decoration: underline;
-        }
-        .icon {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-            color: #3498db;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FaceGlow Pro — Coach IA Glow-Up Premium</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #070b17;
+      --bg-2: #101936;
+      --card: rgba(18, 26, 51, 0.8);
+      --line: rgba(255, 255, 255, 0.14);
+      --text: #f4f7ff;
+      --muted: #b8c2e1;
+      --accent: #8b7cff;
+      --accent-2: #44dcc6;
+      --gold: #f7cf7a;
+      --ok: #43dc91;
+      --danger: #ff7a7a;
+      --shadow: 0 22px 50px rgba(4, 7, 15, .45);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 5%, rgba(139, 124, 255, .24), transparent 32%),
+        radial-gradient(circle at 92% 18%, rgba(68, 220, 198, .18), transparent 35%),
+        linear-gradient(170deg, var(--bg-1), var(--bg-2) 50%, #0b1328 100%);
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1160px; margin: 0 auto; padding: 24px 18px 60px; }
+
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px;
+      background: rgba(255, 255, 255, .03); backdrop-filter: blur(8px);
+      position: sticky; top: 12px; z-index: 10;
+    }
+
+    .brand { font-weight: 900; letter-spacing: .2px; }
+    .brand span {
+      background: linear-gradient(90deg, #d5cdff, var(--accent), var(--accent-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      border: 1px solid rgba(247, 207, 122, .45);
+      color: var(--gold); padding: 6px 10px; border-radius: 999px;
+      font-size: .78rem; font-weight: 700; background: rgba(247, 207, 122, .08);
+    }
+
+    .hero { text-align: center; margin: 30px auto 22px; max-width: 900px; }
+    h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.1; }
+    .hero p { color: var(--muted); line-height: 1.7; margin: 14px auto 0; }
+
+    .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
+    .chip {
+      border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px;
+      color: #d6defa; font-size: .82rem; background: rgba(255,255,255,.03);
+    }
+
+    .layout {
+      display: grid; gap: 14px; margin-top: 18px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 980px) {
+      .layout { grid-template-columns: 1.05fr .95fr; }
+    }
+
+    .card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
+    }
+
+    h2 { margin: 0 0 8px; font-size: 1.2rem; }
+    .hint { margin: 0 0 14px; color: var(--muted); font-size: .93rem; }
+
+    .drop {
+      border: 2px dashed rgba(255,255,255,.26); border-radius: 14px;
+      padding: 16px; text-align: center; background: rgba(255,255,255,.02);
+    }
+    .drop:hover { border-color: var(--accent-2); }
+    input[type=file] { width: 100%; margin-top: 8px; }
+
+    .controls { display: grid; gap: 10px; margin-top: 12px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label { font-size: .88rem; color: var(--muted); display: block; margin-bottom: 5px; }
+
+    select, button {
+      border-radius: 11px; border: 1px solid transparent; padding: 11px 12px;
+      font-size: .94rem; width: 100%;
+    }
+
+    select { background: #18254d; color: var(--text); border-color: var(--line); }
+
+    button {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      font-weight: 800; color: #061128; cursor: pointer;
+    }
+
+    button:hover { filter: brightness(1.06); }
+
+    .preview {
+      margin-top: 12px; min-height: 160px; border-radius: 12px;
+      border: 1px solid var(--line); display: grid; place-items: center;
+      overflow: hidden; background: rgba(255,255,255,.03);
+    }
+
+    .preview img { width: 100%; max-height: 320px; object-fit: cover; display: none; }
+
+    .metrics { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 12px; }
+    .metric { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: rgba(255,255,255,.02); }
+    .metric .k { color: var(--muted); font-size: .82rem; }
+    .metric .v { font-size: 1.22rem; font-weight: 800; margin-top: 3px; }
+
+    .coach-feed {
+      margin-top: 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(0,0,0,.18); max-height: 320px; overflow: auto; padding: 10px;
+    }
+
+    .msg { border-radius: 11px; padding: 9px 10px; margin-bottom: 8px; line-height: 1.45; font-size: .91rem; }
+    .msg.ia { background: rgba(68,220,198,.13); border: 1px solid rgba(68,220,198,.3); }
+    .msg.plan { background: rgba(139,124,255,.13); border: 1px solid rgba(139,124,255,.3); }
+
+    .sections { margin-top: 16px; display: grid; gap: 12px; }
+    .pillars { display: grid; gap: 10px; grid-template-columns: repeat(1,1fr); }
+    @media (min-width: 760px) { .pillars { grid-template-columns: repeat(3,1fr); } }
+
+    .pillar, .testimonial, .faq-item {
+      border: 1px solid var(--line); border-radius: 13px; padding: 12px; background: rgba(255,255,255,.02);
+    }
+    .pillar h3, .testimonial h3, .pricing h3 { margin: 0 0 8px; }
+    .pillar p, .testimonial p, .faq-item p { margin: 0; color: var(--muted); line-height: 1.55; font-size: .92rem; }
+
+    .pricing-wrap { display: grid; gap: 11px; grid-template-columns: 1fr; }
+    @media (min-width: 860px) { .pricing-wrap { grid-template-columns: repeat(3,1fr); } }
+
+    .pricing {
+      border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+      background: rgba(255,255,255,.02); position: relative;
+    }
+
+    .pricing.premium {
+      border-color: rgba(247, 207, 122, .5);
+      box-shadow: 0 0 0 1px rgba(247, 207, 122, .28), 0 20px 38px rgba(247, 207, 122, .1);
+      transform: translateY(-2px);
+    }
+
+    .tag {
+      position: absolute; top: -10px; right: 12px; font-size: .73rem; font-weight: 800;
+      border-radius: 999px; padding: 5px 9px; background: rgba(247, 207, 122, .15);
+      color: var(--gold); border: 1px solid rgba(247, 207, 122, .45);
+    }
+
+    .price { font-size: 1.7rem; font-weight: 900; margin: 4px 0 10px; }
+    .price small { font-size: .9rem; color: var(--muted); font-weight: 600; }
+
+    ul { margin: 0; padding-left: 17px; color: #d8e1ff; }
+    li { margin: 6px 0; font-size: .9rem; }
+
+    .btn-outline {
+      margin-top: 11px; border: 1px solid var(--line); color: var(--text);
+      background: rgba(255,255,255,.02);
+    }
+
+    .footer-note { margin-top: 12px; color: var(--muted); font-size: .82rem; }
+  </style>
 </head>
 <body>
-    <div class="hero">
-        <h1><i class="fas fa-magic"></i> FaceGlow Pro: AI Symmetry Analyzer & Glow-Up Guide</h1>
-        <p class="subtitle">Transform your look with cutting-edge analysis and expert beauty tips. Upload your photo and discover your glow-up potential!</p>
+  <main class="container">
+    <div class="topbar">
+      <div class="brand"><span>FaceGlow Pro</span> • Coach IA</div>
+      <div class="badge">Premium Subscription Available</div>
     </div>
-    
-    <div class="container">
-        <div class="upload-section">
-            <i class="fas fa-upload icon"></i>
-            <p>Choose a clear, front-facing photo of your face</p>
-            <input type="file" id="imageInput" accept="image/*">
-            <br>
-            <button id="analyzeBtn"><i class="fas fa-search"></i> Analyze Face</button>
+
+    <header class="hero">
+      <h1>Ton glow-up complet, piloté par IA et pensé pour un résultat pro</h1>
+      <p>
+        FaceGlow Pro analyse ta photo (localement), te donne un plan routine + style + discipline,
+        et propose un mode Premium avec roadmap 30 jours, templates personnalisés et suivi avancé.
+      </p>
+      <div class="chips">
+        <span class="chip">Analyse photo instantanée</span>
+        <span class="chip">Plan glow-up 7/30 jours</span>
+        <span class="chip">Skincare + style + mindset</span>
+        <span class="chip">Mode Premium</span>
+      </div>
+    </header>
+
+    <section class="layout">
+      <article class="card">
+        <h2>1) Analyse ton visage</h2>
+        <p class="hint">Photo claire, de face, sans filtre pour de meilleurs résultats.</p>
+
+        <div class="drop">
+          <strong>Importer une photo</strong>
+          <input id="imageInput" type="file" accept="image/*" />
         </div>
-        
-        <div class="results" id="results">
-            <h2><i class="fas fa-chart-line"></i> Analysis Results</h2>
-            <canvas id="canvas" width="400" height="400"></canvas>
-            <p>Symmetry Rating: <span class="rating" id="rating">N/A</span>/10 <i class="fas fa-star"></i></p>
-            <div class="advice">
-                <h3><i class="fas fa-lightbulb"></i> Professional Glow-Up Advice</h3>
-                <ul id="adviceList">
-                    <!-- Advice will be populated here -->
-                </ul>
+
+        <div class="controls">
+          <div class="row">
+            <div>
+              <label for="goal">Objectif</label>
+              <select id="goal">
+                <option value="clean">Peau clean & uniforme</option>
+                <option value="sharp">Look plus sculpté</option>
+                <option value="creative">Glow-up créatif / artistique</option>
+                <option value="elite">Transformation premium complète</option>
+              </select>
             </div>
+            <div>
+              <label for="vibe">Style</label>
+              <select id="vibe">
+                <option value="pro">Professionnel</option>
+                <option value="lux">Lux & premium</option>
+                <option value="street">Street moderne</option>
+                <option value="minimal">Minimal clean</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="analyzeBtn">Lancer le Coach IA</button>
         </div>
-    </div>
-    
-    <footer>
-        <p>&copy; 2023 FaceGlow Pro. For real consultations, visit a professional. <a href="#">Privacy Policy</a></p>
-    </footer>
 
-    <script>
-        document.getElementById('analyzeBtn').addEventListener('click', function() {
-            const fileInput = document.getElementById('imageInput');
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const results = document.getElementById('results');
-            const rating = document.getElementById('rating');
-            const adviceList = document.getElementById('adviceList');
+        <div class="preview">
+          <img id="previewImg" alt="Aperçu" />
+          <span id="placeholder">Aperçu photo ici</span>
+        </div>
+      </article>
 
-            if (!fileInput.files[0]) {
-                alert('Please select an image first.');
-                return;
-            }
+      <article class="card">
+        <h2>2) Résultats personnalisés</h2>
+        <p class="hint">Indicateurs visuels estimés localement (pas un diagnostic médical).</p>
 
-            const img = new Image();
-            img.onload = function() {
-                // Draw image on canvas
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        <div class="metrics">
+          <div class="metric"><div class="k">Glow Score</div><div class="v" id="glowScore">—</div></div>
+          <div class="metric"><div class="k">Éclat peau</div><div class="v" id="luminosity">—</div></div>
+          <div class="metric"><div class="k">Texture visuelle</div><div class="v" id="texture">—</div></div>
+          <div class="metric"><div class="k">Tone chaleur</div><div class="v" id="warmth">—</div></div>
+          <div class="metric"><div class="k">Symmetry focus</div><div class="v" id="symmetry">—</div></div>
+          <div class="metric"><div class="k">Readiness premium</div><div class="v" id="premiumReadiness">—</div></div>
+        </div>
 
-                // Simulate symmetry rating (random for demo; in reality, use AI/ML)
-                const symmetryScore = Math.floor(Math.random() * 11); // 0-10
-                rating.textContent = symmetryScore;
+        <div class="coach-feed" id="coachFeed">
+          <div class="msg ia">👋 Je suis ton Coach IA. Envoie une photo pour débloquer ton plan glow-up complet.</div>
+        </div>
 
-                // Clear previous advice
-                adviceList.innerHTML = '';
+        <p class="footer-note">⚠️ Conseils bien-être/style uniquement. Consulte un professionnel de santé pour tout besoin médical.</p>
+      </article>
+    </section>
 
-                // Generate advice based on score
-                let advice = [];
-                if (symmetryScore >= 8) {
-                    advice = [
-                        'Maintain excellent skincare routine with retinoids and hyaluronic acid.',
-                        'Consider cosmetic procedures like fillers for minor asymmetries if desired.',
-                        'Focus on overall health: balanced diet, exercise, and sleep for natural glow.'
-                    ];
-                } else if (symmetryScore >= 5) {
-                    advice = [
-                        'Improve symmetry through targeted exercises (e.g., facial yoga for jawline).',
-                        'Use makeup techniques to contour and highlight features.',
-                        'Consult a dermatologist for treatments like chemical peels or laser therapy.',
-                        'Adopt a healthy lifestyle: hydration, sun protection, and anti-aging products.'
-                    ];
-                } else {
-                    advice = [
-                        'Seek professional evaluation from a maxillofacial surgeon or orthodontist.',
-                        'Consider orthodontic treatments or cosmetic surgery for structural improvements.',
-                        'Build confidence through grooming: regular haircuts, eyewear, and clothing that flatters your face shape.',
-                        'Prioritize mental health; attractiveness is subjective and multifaceted.'
-                    ];
-                }
+    <section class="sections">
+      <article class="card">
+        <h2>Glow-Up System 360°</h2>
+        <div class="pillars">
+          <div class="pillar">
+            <h3>🧴 Skincare & Haircare</h3>
+            <p>Routine matin/soir, SPF, hydratation, actifs progressifs, et stratégie cheveux adaptée à ton style.</p>
+          </div>
+          <div class="pillar">
+            <h3>👔 Style & Présence</h3>
+            <p>Palette couleur, coupe de vêtement, grooming, accessoires, posture et communication visuelle.</p>
+          </div>
+          <div class="pillar">
+            <h3>⚡ Discipline & Habitudes</h3>
+            <p>Sleep score, nutrition, entraînement, suivi hebdo et optimisation continue pour maintenir les résultats.</p>
+          </div>
+        </div>
+      </article>
 
-                advice.forEach(item => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<i class="fas fa-check-circle"></i> ${item}`;
-                    adviceList.appendChild(li);
-                });
+      <article class="card">
+        <h2>Premium Subscription</h2>
+        <p class="hint">Débloque toutes les fonctionnalités pour une transformation rapide et structurée.</p>
+        <div class="pricing-wrap">
+          <div class="pricing">
+            <h3>Starter</h3>
+            <div class="price">0€ <small>/ mois</small></div>
+            <ul>
+              <li>Analyse photo basique</li>
+              <li>Plan glow-up 7 jours</li>
+              <li>Conseils généraux</li>
+            </ul>
+            <button class="btn-outline">Plan actuel</button>
+          </div>
 
-                results.style.display = 'block';
-            };
-            img.src = URL.createObjectURL(fileInput.files[0]);
-        });
-    </script>
+          <div class="pricing premium">
+            <span class="tag">MEILLEUR CHOIX</span>
+            <h3>Premium Pro</h3>
+            <div class="price">19€ <small>/ mois</small></div>
+            <ul>
+              <li>Roadmap glow-up 30 jours personnalisée</li>
+              <li>Checklists quotidiennes + rappels</li>
+              <li>Looks suggérés selon ton vibe</li>
+              <li>Suivi avant/après et score progression</li>
+              <li>Priorité nouveautés IA</li>
+            </ul>
+            <button id="subscribeBtn">Passer en Premium</button>
+          </div>
+
+          <div class="pricing">
+            <h3>Elite Coach</h3>
+            <div class="price">49€ <small>/ mois</small></div>
+            <ul>
+              <li>Tout Premium Pro</li>
+              <li>Protocoles avancés objectifs précis</li>
+              <li>Plan style capsule premium</li>
+              <li>Dashboard discipline hebdo</li>
+            </ul>
+            <button class="btn-outline">Bientôt disponible</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Ils ont amélioré leur image</h2>
+        <div class="pillars">
+          <div class="testimonial">
+            <h3>Yanis — 4 semaines</h3>
+            <p>« J’ai gagné en confiance et mon style est plus cohérent. Le plan quotidien est super clair. »</p>
+          </div>
+          <div class="testimonial">
+            <h3>Leïla — 30 jours</h3>
+            <p>« Ma routine est simple mais efficace. Gros progrès sur la texture et l’éclat. »</p>
+          </div>
+          <div class="testimonial">
+            <h3>Nora — Premium Pro</h3>
+            <p>« Les recommandations style + skincare m’ont fait gagner du temps et de la cohérence. »</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>FAQ rapide</h2>
+        <div class="pillars">
+          <div class="faq-item">
+            <h3>L’analyse est-elle privée ?</h3>
+            <p>Oui, cette version analyse l’image dans ton navigateur via canvas local.</p>
+          </div>
+          <div class="faq-item">
+            <h3>Le Premium est utile pour qui ?</h3>
+            <p>Pour ceux qui veulent une roadmap structurée 30 jours et un suivi de progression.</p>
+          </div>
+          <div class="faq-item">
+            <h3>Est-ce médical ?</h3>
+            <p>Non. C’est un coach bien-être/style. Pour un problème de peau, consulte un dermatologue.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <canvas id="analysisCanvas" width="320" height="320" style="display:none"></canvas>
+  </main>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const previewImg = document.getElementById('previewImg');
+    const placeholder = document.getElementById('placeholder');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const subscribeBtn = document.getElementById('subscribeBtn');
+
+    const glowScore = document.getElementById('glowScore');
+    const luminosity = document.getElementById('luminosity');
+    const texture = document.getElementById('texture');
+    const warmth = document.getElementById('warmth');
+    const symmetry = document.getElementById('symmetry');
+    const premiumReadiness = document.getElementById('premiumReadiness');
+    const coachFeed = document.getElementById('coachFeed');
+
+    const canvas = document.getElementById('analysisCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    let currentImageSrc = null;
+
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files?.[0];
+      if (!file) return;
+      currentImageSrc = URL.createObjectURL(file);
+      previewImg.src = currentImageSrc;
+      previewImg.style.display = 'block';
+      placeholder.style.display = 'none';
+    });
+
+    subscribeBtn.addEventListener('click', () => {
+      alert('✅ Premium Pro activé en mode démo. Intègre Stripe/Checkout pour la production.');
+    });
+
+    analyzeBtn.addEventListener('click', async () => {
+      if (!currentImageSrc) {
+        alert('Ajoute une photo avant de lancer l’analyse.');
+        return;
+      }
+
+      const goal = document.getElementById('goal').value;
+      const vibe = document.getElementById('vibe').value;
+
+      const img = await loadImage(currentImageSrc);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const stats = computeStats(ctx.getImageData(0, 0, canvas.width, canvas.height).data);
+      const score = computeGlowScore(stats, goal);
+      const sym = computeSymmetry(stats);
+      const premium = score >= 75 ? 'Élevée' : score >= 62 ? 'Moyenne' : 'À construire';
+
+      glowScore.textContent = `${score}/100`;
+      luminosity.textContent = levelLabel(stats.luma);
+      texture.textContent = levelLabel(100 - stats.contrast);
+      warmth.textContent = toneLabel(stats.warm);
+      symmetry.textContent = `${sym}/10`;
+      premiumReadiness.textContent = premium;
+
+      const messages = buildPlan({ score, goal, vibe, stats, sym, premium });
+      coachFeed.innerHTML = '';
+      messages.forEach((message, i) => {
+        const div = document.createElement('div');
+        div.className = `msg ${i === 0 ? 'ia' : 'plan'}`;
+        div.innerHTML = message;
+        coachFeed.appendChild(div);
+      });
+    });
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function computeStats(data) {
+      let lumaTotal = 0;
+      let warmTotal = 0;
+      let count = 0;
+      const lValues = [];
+
+      for (let i = 0; i < data.length; i += 16) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const l = 0.299 * r + 0.587 * g + 0.114 * b;
+        lumaTotal += l;
+        warmTotal += (r - b + 255) / 2;
+        lValues.push(l);
+        count++;
+      }
+
+      const mean = lumaTotal / count;
+      let variance = 0;
+      for (const l of lValues) variance += (l - mean) ** 2;
+      const std = Math.sqrt(variance / count);
+
+      return {
+        luma: Math.round((mean / 255) * 100),
+        contrast: Math.round(Math.min(100, (std / 80) * 100)),
+        warm: Math.round((warmTotal / count / 255) * 100)
+      };
+    }
+
+    function computeGlowScore(stats, goal) {
+      const goalBoost = { clean: 1, sharp: 2, creative: 3, elite: 5 }[goal] || 0;
+      const raw = stats.luma * 0.36 + (100 - stats.contrast) * 0.23 + stats.warm * 0.21 + 27 + goalBoost;
+      return Math.max(50, Math.min(98, Math.round(raw)));
+    }
+
+    function computeSymmetry(stats) {
+      const base = 5 + Math.round((100 - Math.abs(55 - stats.luma)) / 20);
+      const tweak = Math.round((70 - Math.abs(55 - stats.warm)) / 35);
+      return Math.max(4, Math.min(10, base + tweak - 2));
+    }
+
+    function levelLabel(value) {
+      if (value >= 78) return 'Excellent';
+      if (value >= 62) return 'Bon';
+      if (value >= 48) return 'Moyen';
+      return 'À booster';
+    }
+
+    function toneLabel(value) {
+      if (value > 66) return 'Chaud';
+      if (value > 45) return 'Neutre';
+      return 'Froid';
+    }
+
+    function buildPlan({ score, goal, vibe, stats, sym, premium }) {
+      const intro = `✨ <strong>Analyse terminée :</strong> Glow Score <strong>${score}/100</strong>, Symmetry focus <strong>${sym}/10</strong>, readiness premium <strong>${premium}</strong>.`;
+
+      const morning = stats.luma < 58
+        ? 'Matin: nettoyant doux + vitamine C + crème hydratante + SPF50.'
+        : 'Matin: nettoyant léger + niacinamide + SPF50 pour maintenir l’éclat.';
+
+      const night = stats.contrast > 55
+        ? 'Soir: double nettoyage + sérum hydratant + crème réparatrice barrière.'
+        : 'Soir: nettoyage doux + rétinoïde progressif 2-3x/semaine + hydratation.';
+
+      const goals = {
+        clean: 'Objectif clean: éviter pics glycémiques, 2L d’eau/jour, linge propre et routine stable.',
+        sharp: 'Objectif sculpté: coupe structurée, sourcils nets, posture + entraînement cou/mâchoire.',
+        creative: 'Objectif créatif: signature visuelle (cheveux/accessoires/maquillage léger) cohérente.',
+        elite: 'Objectif elite: stack complet skincare + style + discipline avec suivi KPI chaque semaine.'
+      }[goal];
+
+      const vibes = {
+        pro: 'Vibe pro: tons sobres, silhouettes ajustées, grooming irréprochable.',
+        lux: 'Vibe lux: matières premium, détails minimalistes, contrastes propres.',
+        street: 'Vibe street: layering intelligent, sneakers fortes, color blocking maîtrisé.',
+        minimal: 'Vibe minimal: palette 3 couleurs, pièces essentielles, lignes nettes.'
+      }[vibe];
+
+      const weekly = score >= 80
+        ? 'Plan 7 jours: maintenance avancée + photos comparatives même lumière + optimisation détails.'
+        : 'Plan 7 jours: discipline stricte matin/soir + sommeil 7h30+ + activité 15-25 min/jour.';
+
+      return [
+        intro,
+        `🧴 <strong>Routine quotidienne</strong><br>${morning}<br>${night}`,
+        `🎯 <strong>Plan style et image</strong><br>${goals}<br>${vibes}`,
+        `🚀 <strong>Exécution</strong><br>${weekly}`,
+        `👑 <strong>Suggestion Premium</strong><br>Débloque Premium Pro pour roadmap 30 jours, checklist journalière et suivi de progression.`
+      ];
+    }
+  </script>
 </body>
 </html>
