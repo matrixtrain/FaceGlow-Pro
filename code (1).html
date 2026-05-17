@@ -253,6 +253,24 @@
     .download-plan {
       display: none;
       margin-top: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: #081023;
+      font-weight: 800;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .download-plan:hover { filter: brightness(1.06); }
+
+    .download-plan[aria-disabled="true"] {
+      cursor: not-allowed;
+      filter: grayscale(0.4);
+      opacity: 0.65;
     }
 
     .msg {
@@ -332,7 +350,7 @@
         <div class="coach" id="coachFeed">
           <div class="msg ia">👋 Je suis ton Coach IA FaceGlow Pro. Choisis ton objectif et tes jours d'entraînement pour générer un protocole premium complet.</div>
         </div>
-        <button id="downloadPlanBtn" class="download-plan">💾 Télécharger mon plan (.TXT)</button>
+        <a id="downloadPlanLink" class="download-plan" href="#" download="faceglow-plan-premium.TXT" aria-disabled="true">💾 Télécharger mon plan (.TXT)</a>
 
         <p class="footnote">⚠️ Ce coach fournit des conseils bien-être/training et ne remplace pas un médecin, un kinésithérapeute ou un coach diplômé.</p>
       </article>
@@ -346,7 +364,7 @@
     const previewImg = document.getElementById('previewImg');
     const placeholder = document.getElementById('placeholder');
     const analyzeBtn = document.getElementById('analyzeBtn');
-    const downloadPlanBtn = document.getElementById('downloadPlanBtn');
+    const downloadPlanLink = document.getElementById('downloadPlanLink');
     const canvas = document.getElementById('analysisCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
@@ -359,6 +377,7 @@
     let currentImageSrc = null;
     let currentPlan = null;
     let currentObjectUrl = null;
+    let currentPlanDownloadUrl = null;
 
     const REQUIRED_GOALS = ['masse', 'seche'];
     const REQUIRED_DAY_OPTIONS = ['3', '4', '5'];
@@ -631,7 +650,7 @@
 
         currentPlan = getTrainingPlan(goal, days, score);
         renderPlan(currentPlan);
-        downloadPlanBtn.style.display = 'block';
+        updateDownloadLink(currentPlan);
       } catch (error) {
         console.error(error);
         alert('Impossible de générer le plan. Vérifie ta photo ou réessaie sans image.');
@@ -641,18 +660,28 @@
       }
     });
 
-    downloadPlanBtn.addEventListener('click', () => {
-      if (!currentPlan) return;
-      const blob = new Blob([formatPlanAsTxt(currentPlan)], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `faceglow-plan-${currentPlan.goalSlug}-${currentPlan.days}jours.TXT`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 0);
+    downloadPlanLink.addEventListener('click', (event) => {
+      if (!currentPlan || downloadPlanLink.getAttribute('aria-disabled') === 'true') {
+        event.preventDefault();
+      }
     });
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => {
+        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+        if (currentPlanDownloadUrl) URL.revokeObjectURL(currentPlanDownloadUrl);
+      });
+    }
+
+    function updateDownloadLink(plan) {
+      if (currentPlanDownloadUrl) URL.revokeObjectURL(currentPlanDownloadUrl);
+      const blob = new Blob([formatPlanAsTxt(plan)], { type: 'text/plain;charset=utf-8' });
+      currentPlanDownloadUrl = URL.createObjectURL(blob);
+      downloadPlanLink.href = currentPlanDownloadUrl;
+      downloadPlanLink.download = `faceglow-plan-${plan.goalSlug}-${plan.days}jours.TXT`;
+      downloadPlanLink.setAttribute('aria-disabled', 'false');
+      downloadPlanLink.style.display = 'block';
+    }
 
     function ex(name, sets, reps, rest, tempo, note) {
       return { name, sets, reps, rest, tempo, note };
