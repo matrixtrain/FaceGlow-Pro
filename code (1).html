@@ -193,9 +193,66 @@
       border: 1px solid rgba(255,255,255,.15);
       border-radius: 14px;
       padding: 12px;
-      max-height: 320px;
+      max-height: 620px;
       overflow: auto;
       background: rgba(0, 0, 0, .18);
+    }
+
+    .workout-card {
+      margin-top: 12px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.025));
+    }
+
+    .workout-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.02rem;
+      color: #ffffff;
+    }
+
+    .workout-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .workout-meta span {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--muted);
+      background: rgba(0,0,0,.16);
+      font-size: .82rem;
+    }
+
+    .exercise-list {
+      display: grid;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .exercise {
+      border-left: 3px solid var(--accent-2);
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,.18);
+    }
+
+    .exercise strong { color: #fff; }
+
+    .exercise small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+
+    .download-plan {
+      display: none;
+      margin-top: 12px;
     }
 
     .msg {
@@ -236,24 +293,23 @@
         <div class="controls">
           <div class="inline">
             <div>
-              <label for="goal">Objectif principal</label>
+              <label for="goal">Objectif training</label>
               <select id="goal">
-                <option value="clean">Peau clean & uniforme</option>
-                <option value="sharp">Look plus sculpté</option>
-                <option value="creative">Glow-up créatif / artistique</option>
+                <option value="masse">Prise de masse</option>
+                <option value="seche">Sèche accentuée</option>
               </select>
             </div>
             <div>
-              <label for="vibe">Style recherché</label>
-              <select id="vibe">
-                <option value="pro">Professionnel</option>
-                <option value="lux">Lux & premium</option>
-                <option value="street">Modern street</option>
+              <label for="days">Jours / semaine</label>
+              <select id="days">
+                <option value="3">3 jours</option>
+                <option value="4">4 jours</option>
+                <option value="5">5 jours</option>
               </select>
             </div>
           </div>
 
-          <button id="analyzeBtn">Analyser avec le Coach IA</button>
+          <button id="analyzeBtn">Générer mon plan premium</button>
         </div>
 
         <div class="preview">
@@ -274,10 +330,11 @@
         </div>
 
         <div class="coach" id="coachFeed">
-          <div class="msg ia">👋 Je suis ton Coach IA FaceGlow Pro. Envoie une photo pour générer ton plan glow-up personnalisé.</div>
+          <div class="msg ia">👋 Je suis ton Coach IA FaceGlow Pro. Choisis ton objectif et tes jours d'entraînement pour générer un protocole premium complet.</div>
         </div>
+        <button id="downloadPlanBtn" class="download-plan">💾 Télécharger mon plan (.TXT)</button>
 
-        <p class="footnote">⚠️ Ce coach fournit des conseils bien-être/style et ne remplace pas un dermatologue ou un professionnel de santé.</p>
+        <p class="footnote">⚠️ Ce coach fournit des conseils bien-être/training et ne remplace pas un médecin, un kinésithérapeute ou un coach diplômé.</p>
       </article>
     </section>
   </div>
@@ -289,6 +346,7 @@
     const previewImg = document.getElementById('previewImg');
     const placeholder = document.getElementById('placeholder');
     const analyzeBtn = document.getElementById('analyzeBtn');
+    const downloadPlanBtn = document.getElementById('downloadPlanBtn');
     const canvas = document.getElementById('analysisCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
@@ -299,48 +357,471 @@
     const coachFeed = document.getElementById('coachFeed');
 
     let currentImageSrc = null;
+    let currentPlan = null;
+    let currentObjectUrl = null;
+
+    const REQUIRED_GOALS = ['masse', 'seche'];
+    const REQUIRED_DAY_OPTIONS = ['3', '4', '5'];
+    const REQUIRED_EXERCISE_FIELDS = ['name', 'sets', 'reps', 'rest', 'tempo', 'note'];
+
+    const TRAINING_DATABASE = {
+      masse: {
+        label: 'PRISE DE MASSE — Hypertrophie & Force',
+        subtitle: 'Objectif: surcharge progressive, gros mouvements maîtrisés, volume premium et récupération complète.',
+        nutrition: 'Surplus calorique contrôlé (+250 à +400 kcal), 1,8-2,2 g de protéines/kg, glucides autour de la séance, sommeil 7h30-9h.',
+        days: {
+          3: {
+            split: 'Full Body / Upper-Lower Split',
+            weeklyNote: 'Rythme conseillé: Lundi / Mercredi / Vendredi. Les jours off servent à restaurer le système nerveux et à progresser lourd.',
+            sessions: [
+              session('Jour 1', 'Full Body — Base Lourde & Tension Mécanique', '75-85 min', 'RPE 7-8', 'Priorité aux charges propres: garde 1-2 répétitions en réserve sur les séries lourdes.', [
+                ex('Squat arrière barre', '4 séries', '6-8 reps', '2 min 30', '3-1-1', 'Descente contrôlée, gainage fort, profondeur constante.'),
+                ex('Développé couché barre', '4 séries', '8-10 reps', '2 min', '2-1-1', 'Omoplates serrées, trajectoire stable, verrouillage sans rebond.'),
+                ex('Rowing barre buste penché', '4 séries', '8-10 reps', '2 min', '2-1-1', 'Tire les coudes vers les hanches et garde le dos neutre.'),
+                ex('Élévations latérales haltères', '4 séries', '12-15 reps', '75s', '2-1-2', 'Monte au niveau des épaules, contrôle total, zéro élan.')
+              ], 'Finisher premium: 2 séries de farmer walk lourd 40 m, repos 90s.'),
+              recovery('Jour 2', 'Repos / Récupération Active', '30-40 min', 'Marche rapide zone 2 + mobilité hanches/épaules + respiration diaphragmatique 5 min.', [
+                ex('Marche rapide zone 2', '1 bloc', '25-30 min', 'Aucun', 'Continu', 'Reste en aisance respiratoire, posture haute, foulée souple.'),
+                ex('Mobilité hanches et épaules', '3 séries', '45s par zone', '30s', 'Fluide', 'Travail sans douleur: rotations de hanches, ouverture thoracique, dislocates élastique.'),
+                ex('Respiration diaphragmatique', '5 séries', '5 cycles lents', '20s', 'Contrôle', 'Inspire par le nez, expire longuement pour accélérer la récupération.')
+              ]),
+              session('Jour 3', 'Full Body — Chaîne Postérieure & Tirage', '75-85 min', 'RPE 7-8', 'Séance dense mais non maximale: chaque répétition doit rester explosive.', [
+                ex('Soulevé de terre conventionnel', '4 séries', '5-6 reps', '3 min', '2-1-1', 'Barre proche des tibias, dorsaux verrouillés, extension de hanche puissante.'),
+                ex('Tractions pronation lestées ou assistées', '4 séries', '6-10 reps', '2 min', '2-1-1', 'Amplitude complète, menton au-dessus de la barre, descente contrôlée.'),
+                ex('Développé militaire debout', '4 séries', '6-8 reps', '2 min', '2-1-1', 'Fessiers serrés, cage verrouillée, barre proche du visage.'),
+                ex('Curl biceps barre EZ', '4 séries', '10-12 reps', '90s', '2-1-2', 'Coudes fixes, contraction forte en haut, pas de balancier.')
+              ], 'Finisher premium: gainage planche lestée 3 x 45s, repos 60s.'),
+              recovery('Jour 4', 'Repos Complet', '20-30 min', 'Mobilité douce, hydratation renforcée et 8 000-10 000 pas sans fatigue excessive.', [
+                ex('Marche récupération basse intensité', '1 bloc', '20-30 min', 'Aucun', 'Continu', 'Garde un rythme facile: l’objectif est de drainer, pas de performer.'),
+                ex('Routine mobilité douce', '2 séries', '6-8 mouvements', '30s', 'Lent', 'Chevilles, hanches, colonne thoracique et épaules, amplitude confortable.'),
+                ex('Auto-massage ou relâchement', '1 bloc', '5-8 min', 'Aucun', 'Lent', 'Quadriceps, pectoraux et dorsaux avec pression modérée.')
+              ]),
+              session('Jour 5', 'Full Body Finisher — Volume & Symétrie', '70-80 min', 'RPE 8', 'Objectif: compléter le volume hebdomadaire sans casser la récupération.', [
+                ex('Fentes bulgares haltères', '4 séries', '8-10 reps/jambe', '2 min', '3-1-1', 'Buste légèrement incliné, genou stable, poussée talon.'),
+                ex('Dips pectoraux lestés ou assistés', '4 séries', '8-12 reps', '2 min', '2-1-1', 'Épaules basses, amplitude propre, légère inclinaison avant.'),
+                ex('Oiseau épaules sur banc incliné', '4 séries', '12-15 reps', '75s', '2-1-2', 'Cible l’arrière d’épaule, pouces légèrement vers le bas.'),
+                ex('Gainage anti-extension', '4 séries', '45-60s', '60s', 'Contrôle', 'Rétroversion bassin, respiration lente, aucune cambrure.')
+              ], 'Finisher premium: pompe lente mécanique 2 x maximum propre, repos 90s.')
+            ]
+          },
+          4: {
+            split: 'Classic Upper / Lower Split',
+            weeklyNote: 'Rythme conseillé: Haut A / Bas A / repos / Haut B / Bas B. Progression double: ajoute des reps puis de la charge.',
+            sessions: [
+              session('Jour 1', 'Haut du Corps A — Focus Pectoraux/Dos', '75-90 min', 'RPE 7-8', 'Séance équilibrée poussée/tirage pour densifier le torse.', [
+                ex('Développé couché barre', '5 séries', '5-8 reps', '2 min 30', '3-1-1', 'Charge lourde, pause légère poitrine, poussée explosive.'),
+                ex('Rowing barre pronation', '4 séries', '8-10 reps', '2 min', '2-1-1', 'Dos plat, traction coude arrière, contrôle de la négative.'),
+                ex('Développé incliné haltères', '4 séries', '8-12 reps', '2 min', '3-0-1', 'Étirement haut des pectoraux, trajectoire convergente.'),
+                ex('Tirage vertical prise neutre', '4 séries', '10-12 reps', '90s', '2-1-2', 'Déprime les épaules avant de tirer, poitrine haute.'),
+                ex('Écartés poulie vis-à-vis', '3 séries', '12-15 reps', '75s', '2-1-2', 'Contraction maximale au centre, amplitude sans douleur.')
+              ], 'Finisher premium: face pull 3 x 15, repos 60s.'),
+              session('Jour 2', 'Bas du Corps A — Focus Quadriceps/Mollets', '75-90 min', 'RPE 8', 'Dominante genou pour construire des cuisses épaisses et athlétiques.', [
+                ex('Squat avant ou hack squat', '5 séries', '6-8 reps', '2 min 30', '3-1-1', 'Torse haut, genoux suivent les pointes, amplitude profonde.'),
+                ex('Presse à cuisses pieds bas', '4 séries', '10-12 reps', '2 min', '3-1-1', 'Ne verrouille pas brutalement, garde une tension continue.'),
+                ex('Fentes marchées haltères', '4 séries', '10 pas/jambe', '2 min', '2-1-1', 'Pas longs contrôlés, bassin stable.'),
+                ex('Leg extension', '4 séries', '12-15 reps', '75s', '2-1-2', 'Pause d’une seconde en contraction haute.'),
+                ex('Mollets debout machine', '5 séries', '10-15 reps', '60s', '2-1-2', 'Étirement complet en bas, montée explosive contrôlée.')
+              ], 'Finisher premium: wall sit 2 x 60s, repos 60s.'),
+              session('Jour 3', 'Haut du Corps B — Focus Épaules/Bras', '70-85 min', 'RPE 8', 'Volume ciblé pour épaules rondes et bras plus pleins.', [
+                ex('Développé militaire assis', '4 séries', '6-8 reps', '2 min', '2-1-1', 'Poignets empilés, amplitude stable, pas d’hypercambrure.'),
+                ex('Tractions supination', '4 séries', '8-10 reps', '2 min', '2-1-1', 'Tire poitrine vers la barre, coudes bas.'),
+                ex('Élévations latérales à la poulie', '4 séries', '12-15 reps/côté', '75s', '2-1-2', 'Tension continue, main légèrement devant le corps.'),
+                ex('Curl incliné haltères', '4 séries', '10-12 reps', '90s', '3-1-1', 'Étirement biceps, coudes reculés fixes.'),
+                ex('Extension triceps corde', '4 séries', '10-12 reps', '90s', '2-1-2', 'Écarte la corde en bas, épaules immobiles.')
+              ], 'Finisher premium: élévations latérales partielles 2 x 25, repos 45s.'),
+              session('Jour 4', 'Bas du Corps B — Focus Ischios/Abdos', '75-90 min', 'RPE 7-8', 'Dominante hanche pour protéger le dos et épaissir la chaîne postérieure.', [
+                ex('Soulevé de terre roumain', '4 séries', '8-10 reps', '2 min 30', '3-1-1', 'Hanches loin derrière, tibias presque verticaux, dos neutre.'),
+                ex('Hip thrust barre', '4 séries', '8-12 reps', '2 min', '2-1-1', 'Rétroversion en haut, menton rentré, pause contraction.'),
+                ex('Leg curl allongé', '4 séries', '10-12 reps', '90s', '2-1-2', 'Contrôle la descente et garde les hanches collées.'),
+                ex('Ab wheel ou rollout Swiss ball', '4 séries', '8-12 reps', '75s', 'Contrôle', 'Avance uniquement sans perdre la position lombaire.'),
+                ex('Crunch câble lourd', '4 séries', '12-15 reps', '75s', '2-1-2', 'Enroule la colonne, bassin fixe, contraction abdominale forte.')
+              ], 'Finisher premium: farmer walk 3 x 30 m, repos 90s.')
+            ]
+          },
+          5: {
+            split: 'Bro Split / Specialized Muscle Group Growth',
+            weeklyNote: 'Rythme conseillé: 5 jours consécutifs ou 3+2 avec repos au milieu. Chaque muscle reçoit une séance premium dédiée.',
+            sessions: [
+              session('Jour 1', 'Pectoraux / Triceps — Épaisseur & Verrouillage', '75-90 min', 'RPE 8', 'Priorité au recrutement pectoral avant de charger les triceps.', [
+                ex('Développé couché barre', '5 séries', '6-8 reps', '2 min 30', '3-1-1', 'Pause contrôlée en bas, trajectoire identique à chaque rep.'),
+                ex('Développé incliné haltères', '4 séries', '8-10 reps', '2 min', '3-0-1', 'Étirement haut de pec, montée puissante.'),
+                ex('Dips pectoraux', '4 séries', '8-12 reps', '2 min', '2-1-1', 'Inclinaison avant, coudes à 45°, amplitude maîtrisée.'),
+                ex('Extension triceps barre EZ au front', '4 séries', '10-12 reps', '90s', '3-1-1', 'Coudes serrés, descente vers le front sans bouger les épaules.'),
+                ex('Pushdown triceps corde', '3 séries', '12-15 reps', '75s', '2-1-2', 'Contraction en bas et contrôle complet.')
+              ], 'Finisher premium: pompes déficit 2 x maximum propre, repos 90s.'),
+              session('Jour 2', 'Dos / Biceps — Largeur & Densité', '75-90 min', 'RPE 8', 'Alterner vertical et horizontal pour un dos complet.', [
+                ex('Tractions pronation lestées', '5 séries', '6-8 reps', '2 min 30', '2-1-1', 'Amplitude complète, scapulas engagées.'),
+                ex('Rowing T-bar', '4 séries', '8-10 reps', '2 min', '2-1-1', 'Tire vers le bas du sternum, buste fixe.'),
+                ex('Tirage horizontal poulie neutre', '4 séries', '10-12 reps', '90s', '2-1-2', 'Épaules basses, contraction dorsaux 1 seconde.'),
+                ex('Curl barre EZ', '4 séries', '8-10 reps', '90s', '2-1-2', 'Poignets neutres, coudes sous les épaules.'),
+                ex('Curl marteau haltères', '3 séries', '10-12 reps', '75s', '2-1-2', 'Travail brachial, aucun balancier.')
+              ], 'Finisher premium: pullover câble 3 x 15, repos 60s.'),
+              session('Jour 3', 'Jambes — Squat Focus', '80-95 min', 'RPE 8', 'Séance lourde et complète, du squat aux finitions quadriceps/ischios.', [
+                ex('Squat arrière barre', '5 séries', '5-8 reps', '3 min', '3-1-1', 'Série principale lourde, posture solide et profondeur répétable.'),
+                ex('Presse à cuisses', '4 séries', '10-12 reps', '2 min', '3-1-1', 'Amplitude longue, tension continue.'),
+                ex('Soulevé de terre roumain', '4 séries', '8-10 reps', '2 min', '3-1-1', 'Étirement ischios, hanches en arrière.'),
+                ex('Leg extension', '4 séries', '12-15 reps', '75s', '2-1-2', 'Pic de contraction marqué.'),
+                ex('Mollets assis', '5 séries', '12-15 reps', '60s', '2-1-2', 'Pause en bas et en haut à chaque répétition.')
+              ], 'Finisher premium: walking lunges poids du corps 2 x 24 pas, repos 90s.'),
+              session('Jour 4', 'Épaules / Trapèzes — Carrure Premium', '70-85 min', 'RPE 8', 'Construire deltoïdes 3D, posture haute et trapèzes nets.', [
+                ex('Développé militaire debout', '5 séries', '5-8 reps', '2 min 30', '2-1-1', 'Gainage total, trajectoire verticale.'),
+                ex('Élévations latérales haltères', '5 séries', '12-15 reps', '75s', '2-1-2', 'Volume prioritaire, contrôle sans élan.'),
+                ex('Oiseau à la poulie', '4 séries', '12-15 reps', '75s', '2-1-2', 'Arrière d’épaule isolé, omoplates stables.'),
+                ex('Shrugs haltères lourds', '4 séries', '10-12 reps', '90s', '2-1-2', 'Monte droit, pause haute, aucune rotation.'),
+                ex('Face pull corde', '3 séries', '15-20 reps', '60s', '2-1-2', 'Coudes hauts, rotation externe propre.')
+              ], 'Finisher premium: lateral raise drop set 2 passages, repos 90s.'),
+              session('Jour 5', 'Bras — Supersets Biceps/Triceps Explosif', '65-80 min', 'RPE 8-9', 'Pompe maximale avec supersets antagonistes et repos courts.', [
+                ex('Superset curl barre EZ + développé serré', '4 séries', '8-10 + 8-10 reps', '90s après le superset', '2-1-1', 'Passe du biceps au triceps sans pause, technique stricte.'),
+                ex('Superset curl incliné + extension corde au-dessus tête', '4 séries', '10-12 + 10-12 reps', '90s après le superset', '3-1-1', 'Étirement fort sur les deux muscles.'),
+                ex('Superset curl marteau + dips banc lestés', '4 séries', '12 + 12 reps', '75s après le superset', '2-1-2', 'Garde les épaules basses et les coudes stables.'),
+                ex('Curl concentration', '3 séries', '12-15 reps/bras', '60s', '2-1-2', 'Pic de contraction volontaire.'),
+                ex('Extension triceps unilatérale poulie', '3 séries', '12-15 reps/bras', '60s', '2-1-2', 'Finir chaque bras avec amplitude complète.')
+              ], 'Finisher premium: 5 minutes EMOM, 8 curls élastique + 8 pushdowns élastique.')
+            ]
+          }
+        }
+      },
+      seche: {
+        label: 'SÈCHE ACCENTUÉE — Fat Loss, Conditioning & Muscle Retention',
+        subtitle: 'Objectif: garder la masse musculaire, augmenter la dépense énergétique et maintenir une intensité contrôlée.',
+        nutrition: 'Déficit calorique modéré (-300 à -500 kcal), 2,0-2,4 g de protéines/kg, fibres à chaque repas, hydratation et électrolytes.',
+        days: {
+          3: {
+            split: 'HIIT & Full Body Circuits',
+            weeklyNote: 'Rythme conseillé: 1 jour intense / 1 jour LISS / 1 jour renforcement. Garde les repos courts et la qualité technique haute.',
+            sessions: [
+              session('Jour 1', 'Circuit Métabolique Haute Intensité', '45-55 min', 'RPE 8-9', 'Effectue 5 tours. Repos 45s entre exercices et 2 min entre les tours.', [
+                ex('Burpees explosifs', '5 tours', '12-15 reps', '45s', 'Dynamique', 'Poitrine proche du sol, saut vertical propre.'),
+                ex('Goblet squat haltère', '5 tours', '15 reps', '45s', '2-1-1', 'Coudes entre les genoux, buste haut.'),
+                ex('Pompes strictes', '5 tours', '12-20 reps', '45s', '2-0-1', 'Corps gainé, amplitude complète.'),
+                ex('Mountain climbers rapides', '5 tours', '45s', '45s', 'Rapide contrôlé', 'Genoux vers poitrine, bassin stable.')
+              ], 'Finisher sèche: 6 minutes AMRAP corde à sauter 40s / repos 20s.'),
+              session('Jour 2', 'Cardio LISS / Marche Inclinée', '45 min', 'Zone 2', 'Cardio continu nasal si possible: tu dois pouvoir parler en phrases courtes.', [
+                ex('Marche inclinée tapis', '1 bloc', '45 min', 'Aucun', 'Continu', 'Inclinaison 8-12%, allure 5-6,5 km/h selon niveau.'),
+                ex('Mobilité hanches et chevilles', '3 séries', '45s par zone', '30s', 'Fluide', 'Travail doux pour favoriser la récupération.'),
+                ex('Respiration box breathing', '5 séries', '4-4-4-4', '20s', 'Contrôle', 'Baisse le stress et améliore la récupération.')
+              ], 'Option premium: terminer par 8 000-12 000 pas sur la journée.'),
+              session('Jour 3', 'Circuit Renforcement & Core', '45-60 min', 'RPE 8', 'Effectue 4-5 tours avec 45s de repos entre exercices et 2 min entre tours.', [
+                ex('Fentes sautées alternées', '4-5 tours', '12 reps/jambe', '45s', 'Explosif', 'Atterrissage souple, genou aligné.'),
+                ex('Dips sur banc ou barres', '4-5 tours', '12-15 reps', '45s', '2-1-1', 'Coudes arrière, épaules basses.'),
+                ex('Gainage dynamique épaules tap', '4-5 tours', '45s', '45s', 'Contrôle', 'Bassin stable malgré les taps.'),
+                ex('Corde à sauter', '4-5 tours', '60s', '45s', 'Rapide', 'Rythme léger, rebonds bas, respiration régulière.')
+              ], 'Finisher sèche: hollow hold 3 x 40s, repos 30s.')
+            ]
+          },
+          4: {
+            split: 'Strength + Cardio Intervals',
+            weeklyNote: 'Rythme conseillé: 2 séances force-circuit, 1 HIIT pur, 1 AMRAP full body. Les temps de repos sont obligatoires.',
+            sessions: [
+              session('Jour 1', 'Haut du Corps Puissance + 10 min Finisher Cardio', '55-70 min', 'RPE 8', 'Force conservatrice puis cardio court pour brûler sans dégrader la technique.', [
+                ex('Développé couché haltères', '4 séries', '8-10 reps', '90s', '2-1-1', 'Garde 1 rep en réserve, contraction pectorale.'),
+                ex('Rowing poulie basse', '4 séries', '10-12 reps', '90s', '2-1-2', 'Épaules basses, pause contraction.'),
+                ex('Développé épaules haltères', '3 séries', '10-12 reps', '75s', '2-1-1', 'Amplitude stable, gainage fort.'),
+                ex('Tirage vertical', '3 séries', '12-15 reps', '75s', '2-1-2', 'Contrôle sans élan.'),
+                ex('Finisher rameur', '10 rounds', '30s sprint / 30s lent', '30s actif', 'Intervalles', 'Sprint puissant, récupération en mouvement.')
+              ], 'Finisher additionnel: gainage latéral 2 x 45s/côté, repos 30s.'),
+              session('Jour 2', 'Bas du Corps Circuit + Abdos Shred', '55-70 min', 'RPE 8-9', 'Travail jambes en circuit pour maximiser la dépense calorique.', [
+                ex('Front squat ou goblet squat', '4 tours', '12-15 reps', '60s', '3-1-1', 'Buste haut, amplitude propre.'),
+                ex('Soulevé de terre roumain haltères', '4 tours', '12-15 reps', '60s', '3-1-1', 'Hanches arrière, tension ischios.'),
+                ex('Step-up sur banc', '4 tours', '12 reps/jambe', '60s', '2-1-1', 'Poussée talon, contrôle descente.'),
+                ex('Crunch câble', '4 tours', '15-20 reps', '45s', '2-1-2', 'Enroulement complet, respiration expirée.'),
+                ex('Planche commando', '4 tours', '45s', '45s', 'Contrôle', 'Bassin verrouillé, rythme constant.')
+              ], 'Finisher sèche: vélo assault bike 6 x 20s fort / 40s facile.'),
+              session('Jour 3', 'Session Pure HIIT / Intervalles Sprint', '35-45 min', 'RPE 9', 'Qualité maximale: échauffe-toi 10 min puis respecte les récupérations.', [
+                ex('Sprints tapis ou extérieur', '10 séries', '20s sprint', '100s marche', 'Max contrôlé', 'Accélération progressive, posture haute.'),
+                ex('Corde à sauter double ou simple', '8 séries', '40s', '20s', 'Rapide', 'Rythme constant, rebonds légers.'),
+                ex('Burpees low-impact ou explosifs', '6 séries', '30s', '45s', 'Dynamique', 'Choisis la version qui garde la technique propre.'),
+                ex('Gainage hollow body', '4 séries', '40s', '30s', 'Contrôle', 'Bas du dos plaqué, respiration courte.')
+              ], 'Retour au calme premium: 8 min marche lente + mobilité mollets/ischios.'),
+              session('Jour 4', 'Full Body AMRAP Intense', '45-60 min', 'RPE 8-9', 'Bloc principal: 20 minutes AMRAP, note les tours pour progresser.', [
+                ex('Kettlebell swing', 'AMRAP 20 min', '15 reps', 'Au besoin 15-30s', 'Explosif hanche', 'Hanches puissantes, bras relâchés.'),
+                ex('Pompes', 'AMRAP 20 min', '12 reps', 'Au besoin 15-30s', '2-0-1', 'Reste gainé et fractionne si nécessaire.'),
+                ex('Goblet squat', 'AMRAP 20 min', '15 reps', 'Au besoin 15-30s', '2-1-1', 'Amplitude constante.'),
+                ex('Renegade row haltères', 'AMRAP 20 min', '8 reps/bras', 'Au besoin 15-30s', 'Contrôle', 'Bassin stable, tirage coude arrière.'),
+                ex('Sit-up complet', 'AMRAP 20 min', '15 reps', 'Au besoin 15-30s', 'Contrôle', 'Montée fluide, descente maîtrisée.')
+              ], 'Finisher sèche: 4 minutes Tabata mountain climbers 20s/10s.')
+            ]
+          },
+          5: {
+            split: 'Push/Pull/Legs + Cardio Conditioning',
+            weeklyNote: 'Rythme conseillé: PPL puis deux jours conditionnement. Volume modéré, repos courts et intensité métabolique.',
+            sessions: [
+              session('Jour 1', 'Push (Poussée) — Intensité Sèche', '55-70 min', 'RPE 8', 'Maintenir la force de poussée tout en créant une forte dépense.', [
+                ex('Développé incliné haltères', '4 séries', '10-12 reps', '90s', '2-1-1', 'Charge solide, exécution propre.'),
+                ex('Pompes déficit', '4 séries', '12-20 reps', '60s', '2-0-1', 'Amplitude longue, gainage total.'),
+                ex('Développé militaire haltères', '4 séries', '10-12 reps', '75s', '2-1-1', 'Pas de cambrure excessive.'),
+                ex('Élévations latérales', '4 séries', '15-20 reps', '45s', '2-1-2', 'Brûlure contrôlée, pas d’élan.'),
+                ex('Extension triceps corde', '4 séries', '15 reps', '45s', '2-1-2', 'Contraction forte en bas.')
+              ], 'Finisher sèche: 8 minutes EMOM, 10 burpees minute paire / 14 pompes minute impaire.'),
+              session('Jour 2', 'Pull (Tirage) — Focus Densité', '55-70 min', 'RPE 8', 'Créer un dos dense et maintenir la masse en déficit.', [
+                ex('Tractions assistées ou pronation', '4 séries', '8-12 reps', '90s', '2-1-1', 'Amplitude complète, scapulas actives.'),
+                ex('Rowing haltère unilatéral', '4 séries', '12 reps/bras', '75s', '2-1-2', 'Pause en haut, dos neutre.'),
+                ex('Tirage vertical prise serrée', '4 séries', '12-15 reps', '60s', '2-1-2', 'Coudes vers les côtes.'),
+                ex('Face pull corde', '4 séries', '15-20 reps', '45s', '2-1-2', 'Arrière d’épaules et posture.'),
+                ex('Curl marteau alterné', '4 séries', '12-15 reps', '45s', '2-1-2', 'Contrôle, avant-bras solides.')
+              ], 'Finisher sèche: rameur 7 x 30s fort / 30s facile.'),
+              session('Jour 3', 'Legs (Jambes) — Brûleur de Calories', '60-75 min', 'RPE 8-9', 'Jambes en séries longues pour dépense élevée et maintien musculaire.', [
+                ex('Squat goblet lourd', '4 séries', '15 reps', '75s', '3-1-1', 'Amplitude profonde, buste haut.'),
+                ex('Presse à cuisses', '4 séries', '15-20 reps', '75s', '2-1-1', 'Tension continue, pas de verrouillage violent.'),
+                ex('Fentes marchées', '4 séries', '14 pas/jambe', '60s', '2-1-1', 'Pas contrôlés, respiration régulière.'),
+                ex('Leg curl assis', '4 séries', '15 reps', '60s', '2-1-2', 'Contraction ischios.'),
+                ex('Mollets debout', '5 séries', '15-20 reps', '45s', '2-1-2', 'Pause haute et basse.')
+              ], 'Finisher sèche: sled push ou marche inclinée 10 min en intervalles 30s/30s.'),
+              session('Jour 4', 'Cardio HIIT Explosif — Corde à Sauter & Sprints', '35-50 min', 'RPE 9', 'Cardio agressif mais court, avec échauffement articulaire complet.', [
+                ex('Corde à sauter rapide', '10 séries', '45s', '15s', 'Rapide', 'Reste relâché, rebonds bas.'),
+                ex('Sprint côte ou tapis', '8 séries', '20s', '100s marche', 'Explosif contrôlé', 'Posture haute, bras actifs.'),
+                ex('Skater jumps', '5 séries', '40s', '30s', 'Latéral', 'Atterrissage stable, hanche engagée.'),
+                ex('Planche jack', '5 séries', '40s', '30s', 'Rapide contrôlé', 'Épaules au-dessus des mains, bassin stable.')
+              ], 'Retour au calme premium: marche 6 min + étirements dynamiques 5 min.'),
+              session('Jour 5', 'Finisher Abdos, Gainage & Conditionnement Général', '45-60 min', 'RPE 8', 'Séance finale pour taille solide, posture et capacité de travail.', [
+                ex('Circuit ab wheel', '4 tours', '10-12 reps', '45s', 'Contrôle', 'Amplitude adaptée sans creuser le dos.'),
+                ex('Relevés de genoux suspendu', '4 tours', '12-15 reps', '45s', '2-1-2', 'Bassin enroulé, pas de balancier.'),
+                ex('Russian twists lestés', '4 tours', '20 reps total', '45s', 'Contrôle', 'Rotation thoracique, abdomen serré.'),
+                ex('Farmer carry haltères', '4 tours', '45s', '45s', 'Marche lourde', 'Posture haute, grip fort.'),
+                ex('Battle rope ou jumping jacks', '4 tours', '45s', '45s', 'Intense', 'Rythme soutenu sans perdre la respiration.')
+              ], 'Finisher sèche: 10 minutes AMRAP 10 sit-ups + 10 burpees + 30 sauts corde.')
+            ]
+          }
+        }
+      }
+    };
+
+    const databaseStatus = validateTrainingDatabase();
 
     imageInput.addEventListener('change', () => {
       const file = imageInput.files?.[0];
       if (!file) return;
-      currentImageSrc = URL.createObjectURL(file);
+      if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+      currentObjectUrl = URL.createObjectURL(file);
+      currentImageSrc = currentObjectUrl;
       previewImg.src = currentImageSrc;
       previewImg.style.display = 'block';
       placeholder.style.display = 'none';
     });
 
     analyzeBtn.addEventListener('click', async () => {
-      if (!currentImageSrc) {
-        alert('Ajoute une photo avant de lancer le coach IA.');
+      if (!databaseStatus.valid) {
+        alert(`La base de plans contient une erreur: ${databaseStatus.message}`);
         return;
       }
 
-      const img = await loadImage(currentImageSrc);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      analyzeBtn.disabled = true;
+      const originalButtonText = analyzeBtn.textContent;
+      analyzeBtn.textContent = 'Génération du plan...';
 
-      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-      const stats = computeStats(data);
+      try {
+        let stats = { luma: 68, contrast: 34, warm: 55 };
 
-      const goal = document.getElementById('goal').value;
-      const vibe = document.getElementById('vibe').value;
+        if (currentImageSrc) {
+          const img = await loadImage(currentImageSrc);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+          stats = computeStats(data);
+        }
 
-      const score = Math.max(52, Math.min(97, Math.round(stats.luma * 0.35 + (100 - stats.contrast) * 0.2 + stats.warm * 0.25 + 26)));
+        const goal = document.getElementById('goal').value;
+        const days = document.getElementById('days').value;
+        const score = Math.max(52, Math.min(97, Math.round(stats.luma * 0.35 + (100 - stats.contrast) * 0.2 + stats.warm * 0.25 + 26)));
 
-      glowScore.textContent = `${score}/100`;
-      luminosity.textContent = scoreLabel(stats.luma);
-      contrast.textContent = scoreLabel(100 - stats.contrast);
-      warmth.textContent = toneLabel(stats.warm);
+        glowScore.textContent = `${score}/100`;
+        luminosity.textContent = scoreLabel(stats.luma);
+        contrast.textContent = scoreLabel(100 - stats.contrast);
+        warmth.textContent = toneLabel(stats.warm);
 
-      const messages = buildPlan({ score, goal, vibe, stats });
-      coachFeed.innerHTML = '';
-      messages.forEach((m, i) => {
-        const div = document.createElement('div');
-        div.className = `msg ${i === 0 ? 'ia' : 'plan'}`;
-        div.innerHTML = m;
-        coachFeed.appendChild(div);
-      });
+        currentPlan = getTrainingPlan(goal, days, score);
+        renderPlan(currentPlan);
+        downloadPlanBtn.style.display = 'block';
+      } catch (error) {
+        console.error(error);
+        alert('Impossible de générer le plan. Vérifie ta photo ou réessaie sans image.');
+      } finally {
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = originalButtonText;
+      }
     });
+
+    downloadPlanBtn.addEventListener('click', () => {
+      if (!currentPlan) return;
+      const blob = new Blob([formatPlanAsTxt(currentPlan)], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `faceglow-plan-${currentPlan.goalSlug}-${currentPlan.days}jours.TXT`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    });
+
+    function ex(name, sets, reps, rest, tempo, note) {
+      return { name, sets, reps, rest, tempo, note };
+    }
+
+    function session(day, title, duration, intensity, coaching, exercises, finisher) {
+      return { type: 'training', day, title, duration, intensity, coaching, exercises, finisher };
+    }
+
+    function recovery(day, title, duration, coaching, exercises = []) {
+      return { type: 'recovery', day, title, duration, intensity: 'RPE 2-3', coaching, exercises, finisher: 'Objectif: arriver frais à la séance suivante, sans courbatures résiduelles majeures.' };
+    }
+
+    function validateTrainingDatabase() {
+      try {
+        REQUIRED_GOALS.forEach((goal) => {
+          const goalBlock = TRAINING_DATABASE[goal];
+          if (!goalBlock) throw new Error(`Objectif manquant: ${goal}`);
+
+          REQUIRED_DAY_OPTIONS.forEach((days) => {
+            const dayBlock = goalBlock.days?.[days];
+            if (!dayBlock) throw new Error(`Programme manquant: ${goal}/${days} jours`);
+            if (!Array.isArray(dayBlock.sessions) || dayBlock.sessions.length === 0) {
+              throw new Error(`Aucune séance configurée: ${goal}/${days} jours`);
+            }
+
+            dayBlock.sessions.forEach((workoutSession) => {
+              ['day', 'title', 'duration', 'intensity', 'coaching', 'finisher'].forEach((field) => {
+                if (!workoutSession[field]) throw new Error(`Champ séance manquant (${field}): ${goal}/${days}`);
+              });
+              if (!Array.isArray(workoutSession.exercises) || workoutSession.exercises.length === 0) {
+                throw new Error(`Carte sans exercice détaillé: ${goal}/${days}/${workoutSession.day}`);
+              }
+              workoutSession.exercises.forEach((exercise) => {
+                REQUIRED_EXERCISE_FIELDS.forEach((field) => {
+                  if (!exercise[field]) throw new Error(`Champ exercice manquant (${field}): ${goal}/${days}/${workoutSession.day}`);
+                });
+              });
+            });
+          });
+        });
+        return { valid: true, message: 'Base de plans validée.' };
+      } catch (error) {
+        console.error(error);
+        return { valid: false, message: error.message };
+      }
+    }
+
+    function getTrainingPlan(goal, days, score) {
+      const goalBlock = TRAINING_DATABASE[goal];
+      const dayBlock = goalBlock?.days?.[days];
+      if (!goalBlock || !dayBlock) throw new Error(`Plan introuvable pour ${goal}/${days} jours.`);
+      return {
+        goalSlug: goal,
+        goal: goalBlock.label,
+        subtitle: goalBlock.subtitle,
+        nutrition: goalBlock.nutrition,
+        days,
+        split: dayBlock.split,
+        weeklyNote: dayBlock.weeklyNote,
+        score,
+        sessions: dayBlock.sessions
+      };
+    }
+
+    function renderPlan(plan) {
+      coachFeed.innerHTML = `
+        <div class="msg ia">
+          ✨ <strong>Plan premium généré.</strong><br>
+          <strong>${escapeHtml(plan.goal)}</strong><br>${escapeHtml(plan.days)} jours/semaine — ${escapeHtml(plan.split)}<br>
+          Score de contexte: <strong>${escapeHtml(plan.score)}/100</strong>. Chaque exercice inclut séries, répétitions, tempo et repos obligatoire.
+        </div>
+        <div class="msg plan">
+          📌 <strong>Logique du protocole</strong><br>${escapeHtml(plan.subtitle)}<br><br>
+          🍽️ <strong>Nutrition & récupération</strong><br>${escapeHtml(plan.nutrition)}<br><br>
+          🗓️ <strong>Organisation</strong><br>${escapeHtml(plan.weeklyNote)}
+        </div>
+        ${plan.sessions.map(renderWorkoutCard).join('')}
+      `;
+    }
+
+    function renderWorkoutCard(session) {
+      const exercises = `<div class="exercise-list">${session.exercises.map(renderExercise).join('')}</div>`;
+
+      return `
+        <div class="workout-card">
+          <h3>${escapeHtml(session.day)} — ${escapeHtml(session.title)}</h3>
+          <div class="workout-meta">
+            <span>⏱️ Durée: ${escapeHtml(session.duration)}</span>
+            <span>🔥 Intensité: ${escapeHtml(session.intensity)}</span>
+            <span>⏳ Repos: respecter tous les timers</span>
+          </div>
+          <p>${escapeHtml(session.coaching)}</p>
+          ${exercises}
+          <p><strong>Finisher / consigne premium:</strong> ${escapeHtml(session.finisher)}</p>
+        </div>
+      `;
+    }
+
+    function renderExercise(exercise) {
+      return `
+        <div class="exercise">
+          <strong>${escapeHtml(exercise.name)}</strong>
+          <small>Séries: ${escapeHtml(exercise.sets)} · Répétitions: ${escapeHtml(exercise.reps)} · Repos obligatoire: ${escapeHtml(exercise.rest)} · Tempo: ${escapeHtml(exercise.tempo)}</small>
+          <small>${escapeHtml(exercise.note)}</small>
+        </div>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    function formatPlanAsTxt(plan) {
+      const lines = [
+        'FACEGLOW PRO — PLAN TRAINING PREMIUM',
+        '====================================',
+        `Objectif: ${plan.goal}`,
+        `Fréquence: ${plan.days} jours/semaine`,
+        `Split: ${plan.split}`,
+        `Score de contexte: ${plan.score}/100`,
+        '',
+        'LOGIQUE DU PROTOCOLE',
+        plan.subtitle,
+        '',
+        'NUTRITION & RÉCUPÉRATION',
+        plan.nutrition,
+        '',
+        'ORGANISATION HEBDOMADAIRE',
+        plan.weeklyNote,
+        ''
+      ];
+
+      plan.sessions.forEach((session) => {
+        lines.push('------------------------------------');
+        lines.push(`${session.day} — ${session.title}`);
+        lines.push(`Durée: ${session.duration}`);
+        lines.push(`Intensité: ${session.intensity}`);
+        lines.push(`Coaching: ${session.coaching}`);
+        lines.push('');
+
+        if (session.exercises.length) {
+          lines.push('Exercices détaillés:');
+          session.exercises.forEach((exercise, index) => {
+            lines.push(`${index + 1}. ${exercise.name}`);
+            lines.push(`   - Séries: ${exercise.sets}`);
+            lines.push(`   - Répétitions / durée: ${exercise.reps}`);
+            lines.push(`   - Repos obligatoire: ${exercise.rest}`);
+            lines.push(`   - Tempo: ${exercise.tempo}`);
+            lines.push(`   - Note coach: ${exercise.note}`);
+          });
+        } else {
+          lines.push('Récupération active structurée: marche, mobilité, respiration et sommeil prioritaire. Aucun exercice lourd programmé.');
+        }
+
+        lines.push('');
+        lines.push(`Finisher / consigne premium: ${session.finisher}`);
+        lines.push('');
+      });
+
+      lines.push('Sécurité: adapte les charges, stoppe en cas de douleur inhabituelle et demande un avis professionnel si nécessaire.');
+      return lines.join('\n');
+    }
 
     function loadImage(src) {
       return new Promise((resolve, reject) => {
@@ -391,41 +872,6 @@
       if (value > 65) return 'Chaud';
       if (value > 45) return 'Neutre';
       return 'Froid';
-    }
-
-    function buildPlan({ score, goal, vibe, stats }) {
-      const greeting = `✨ Analyse terminée. Ton <strong>Glow Score est ${score}/100</strong>. Objectif: <strong>${goal}</strong>, style: <strong>${vibe}</strong>.`;
-
-      const routineMorning = stats.luma < 58
-        ? 'Matin: nettoyant doux + vitamine C + SPF50 (obligatoire).'
-        : 'Matin: nettoyant léger + niacinamide + SPF50 pour conserver l’éclat.';
-
-      const routineNight = stats.contrast > 55
-        ? 'Soir: double nettoyage + sérum hydratant + crème barrière (focus texture).'
-        : 'Soir: nettoyage doux + rétinoïde progressif 2-3x/semaine + hydratation.';
-
-      const goalAdvice = {
-        clean: 'Focus clean skin: limiter sucre ultra-transformé, 2L d’eau/jour, taie d’oreiller changée 2x/semaine.',
-        sharp: 'Focus sculpté: haircut plus structuré, sourcils entretenus, posture + exercices cou/mâchoire 10 min/jour.',
-        creative: 'Focus créatif: teste une signature look (liner soft, hair streak, accessoires cohérents avec ton teint).'
-      }[goal];
-
-      const vibeAdvice = {
-        pro: 'Vibe pro: palette sobre (noir, marine, beige), grooming net, parfum discret.',
-        lux: 'Vibe lux: matières premium, bijoux minimalistes, contrastes propres et finition impeccable.',
-        street: 'Vibe street: layering, sneakers statement, coupe moderne, accent couleur contrôlé.'
-      }[vibe];
-
-      const weekly = score >= 80
-        ? 'Challenge 7 jours: maintenir constance, suivi sommeil, et photos avant/après en même lumière.'
-        : 'Challenge 7 jours: routine stricte matin/soir + 15 min sport/jour + zéro oubli SPF.';
-
-      return [
-        greeting,
-        `🧴 <strong>Routine</strong><br>${routineMorning}<br>${routineNight}`,
-        `🎯 <strong>Plan Glow-Up</strong><br>${goalAdvice}<br>${vibeAdvice}`,
-        `🚀 <strong>Exécution</strong><br>${weekly}`
-      ];
     }
   </script>
 </body>
